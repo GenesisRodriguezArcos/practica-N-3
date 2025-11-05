@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const Reporte = () => {
   const [reportes, setReportes] = useState([]);
@@ -24,18 +26,15 @@ const Reporte = () => {
 
     const doc = new jsPDF();
 
-    // Fecha del reporte
     const fecha = new Date().toLocaleString();
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Fecha: ${fecha}`, 14, 10);
 
-    // Título centrado
     doc.setFontSize(18);
-    doc.setTextColor(72, 36, 155); // morado oscuro
+    doc.setTextColor(72, 36, 155);
     doc.text("Reporte de Proyectos", doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
-    // Tabla
     const headers = [["ID", "Nombre", "Resultado"]];
     const rows = reportes.map((r) => [r.id, r.nombre, r.resultado]);
 
@@ -47,16 +46,65 @@ const Reporte = () => {
       headStyles: { fillColor: [124, 58, 237], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [245, 245, 255] },
       didDrawPage: (data) => {
-        // Número de página
         const pageCount = doc.getNumberOfPages();
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Página ${data.pageNumber} / ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+        doc.text(
+          `Página ${data.pageNumber} / ${pageCount}`,
+          doc.internal.pageSize.getWidth() - 20,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "right" }
+        );
       },
     });
 
-    // Descargar PDF
     doc.save("reporte_proyectos.pdf");
+  };
+
+  // Función para generar Excel con formato
+  const generarExcel = () => {
+    if (reportes.length === 0) {
+      alert("Aún no hay datos para generar el Excel");
+      return;
+    }
+
+    // Creamos un workbook y hoja
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ["ID", "Nombre", "Resultado"], // encabezados
+      ...reportes.map((r) => [r.id, r.nombre, r.resultado]),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Formato de encabezado
+    const headerRange = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+      cell.s = {
+        fill: { fgColor: { rgb: "7C3AED" } }, // morado
+        font: { color: { rgb: "FFFFFF" }, bold: true },
+        alignment: { horizontal: "center" },
+      };
+    }
+
+    // Estilo de filas alternadas
+    for (let R = 1; R <= reportes.length; ++R) {
+      for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+        const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+        cell.s = {
+          fill: { fgColor: { rgb: R % 2 === 0 ? "F5F5FF" : "FFFFFF" } },
+          alignment: { horizontal: "center" },
+        };
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+
+    // Guardar archivo
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array", cellStyles: true });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "reporte_proyectos.xlsx");
   };
 
   return (
@@ -99,13 +147,21 @@ const Reporte = () => {
                   </table>
                 </div>
 
-                <div className="mt-8 flex justify-center">
+                <div className="mt-8 flex justify-center gap-4">
                   <button
                     onClick={generarPDF}
                     disabled={reportes.length === 0}
                     className="bg-purple-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-md hover:bg-purple-700 transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
                   >
                     📄 Generar PDF
+                  </button>
+
+                  <button
+                    onClick={generarExcel}
+                    disabled={reportes.length === 0}
+                    className="bg-green-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-md hover:bg-green-700 transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                  >
+                    📊 Generar Excel
                   </button>
                 </div>
               </>
