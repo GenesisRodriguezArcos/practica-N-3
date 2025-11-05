@@ -1,1 +1,0 @@
-# practica-N-3
