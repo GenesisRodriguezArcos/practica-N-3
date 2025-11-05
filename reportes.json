@@ -1,0 +1,5 @@
+[
+  { "id": 1, "nombre": "Proyecto A", "resultado": "Aprobado" },
+  { "id": 2, "nombre": "Proyecto B", "resultado": "Observado" },
+  { "id": 3, "nombre": "Proyecto C", "resultado": "Rechazado" }
+]

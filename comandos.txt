@@ -1,0 +1,12 @@
+npm create vite@latest frontend --template react
+cd frontend
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+python -m venv venv
+source venv/bin/activate
+pip install flask flask-cors
+
+python app.py
+npm run dev

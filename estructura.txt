@@ -1,0 +1,14 @@
+reportes-app/
+├── backend/
+│   ├── app.py
+│   └── data/
+│       └── reportes.json
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       └── components/
+│           └── ReportTable.jsx
